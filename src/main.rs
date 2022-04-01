@@ -39,36 +39,50 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut desc_vec = Vec::new();
     let mut templ_vec = Vec::new();
     let mut templ_str = String::new();
-    for l in raw_str.lines() {
+
+    let mut iter = raw_str.lines();
+    while let Some(l) = iter.next() {
         if l.contains("snippet ") {
-            if !templ_str.is_empty() {
-                templ_vec.push(templ_str.clone());
-                templ_str.clear();
-            }
             if let Some(caps) = re.captures(&l[..]) {
                 if let Some(g) = caps.get(2) {
                     trigger_vec.push(String::from(g.as_str()));
+                    println!("=== {} ===", g.as_str());
                 }
                 if let Some(g) = caps.get(3) {
                     desc_vec.push(g.as_str().replace("\"", ""));
                 }
             }
-        }
-        else {
-            templ_str.push_str(&l[..]);
-            templ_str.push_str("\n");
+            templ_str.clear();
+            let mut it_clone = iter.clone();
+            while let Some(l) = it_clone.next() {
+                if !l.starts_with("snippet "){
+                    if !l.starts_with("# ") {
+                        templ_str.push_str(&l[..]);
+                        templ_str.push_str("\n");
+                    }
+                }
+                else {
+                    println!("{}", l);
+                    println!("{}", templ_str);
+                    templ_vec.push(templ_str.clone());
+                    println!("Push");
+                    break;
+                }
+            }
         }
     }
 
-    if !templ_str.is_empty() {
-        templ_vec.push(templ_str.clone()+"\n");
-        templ_str.clear();
-    }
+    println!("{}", templ_str);
+    templ_vec.push(templ_str.clone());
 
-    for (i, _) in trigger_vec.iter().enumerate() {
+    println!("{}", templ_vec.len());
+    println!("{}", trigger_vec.len());
+    assert!(templ_vec.len() == trigger_vec.len());
+
+    for i in 0..templ_vec.len() {
         out_str.push_str("  <item>\n");
         out_str.push_str(std::format!("    <match>{}</match>\n", &trigger_vec[i]).as_str());
-        out_str.push_str(std::format!("    <fillin>{}</fillin>\n", &templ_vec[i]).as_str());
+        out_str.push_str(std::format!("    <fillin>{}\n    </fillin>\n", &templ_vec[i]).as_str());
         out_str.push_str("  </item>\n");
     }
 
