@@ -1,11 +1,10 @@
-use std::fs;
+use regex::Regex;
 use std::env;
 use std::error::Error;
 use std::fmt;
-use regex::Regex;
+use std::fs;
 use std::io::Write;
 use std::path::Path;
-
 
 #[derive(Debug)]
 struct ProgError(String);
@@ -20,8 +19,7 @@ impl Error for ProgError {}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
-    if args.len() < 2
-    {
+    if args.len() < 2 {
         return Err(Box::new(ProgError("Wrong number of argumets".to_string())));
     }
 
@@ -56,13 +54,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             templ_str.clear();
             let mut it_clone = iter.clone();
             while let Some(l) = it_clone.next() {
-                if !l.starts_with("snippet "){
+                if !l.starts_with("snippet ") {
                     if !l.starts_with("# ") {
                         templ_str.push_str(&l[..]);
                         templ_str.push_str("\n");
                     }
-                }
-                else {
+                } else {
                     println!("{}", l);
                     println!("{}", templ_str);
                     templ_vec.push(templ_str.clone());
