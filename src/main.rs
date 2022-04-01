@@ -68,9 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     for (i, _) in trigger_vec.iter().enumerate() {
         out_str.push_str("  <item>\n");
         out_str.push_str(std::format!("    <match>{}</match>\n", &trigger_vec[i]).as_str());
-        println!("{}", trigger_vec[i]);
         out_str.push_str(std::format!("    <fillin>{}</fillin>\n", &templ_vec[i]).as_str());
-        println!("{}", templ_vec[i]);
         out_str.push_str("  </item>\n");
     }
 
