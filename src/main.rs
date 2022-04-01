@@ -2,6 +2,7 @@ use std::fs;
 use std::env;
 use std::error::Error;
 use std::fmt;
+use regex::Regex;
 use std::io::Write;
 use std::path::Path;
 
@@ -33,13 +34,44 @@ fn main() -> Result<(), Box<dyn Error>> {
     out_str.push_str("<snippets namespace=\"\" license=\"BSD\" filetypes=\"rust\" authors=\"Philip K. Gisslow\" name=\"Rust snippets\">\n");
     out_str.push_str("  <script></script>\n");
 
-    let mut in_snippet = false;
+    let re = Regex::new(r"(\S*)\s(\S*)\s(.*)").unwrap();
+    let mut trigger_vec = Vec::new();
+    let mut desc_vec = Vec::new();
+    let mut templ_vec = Vec::new();
+    let mut templ_str = String::new();
     for l in raw_str.lines() {
-        // FIXME Use regex for this instead...
-        if !in_snippet && l.contains("snippet") {
-            println!("{}", l);
+        if l.contains("snippet ") {
+            if !templ_str.is_empty() {
+                templ_vec.push(templ_str.clone());
+                templ_str.clear();
+            }
+            if let Some(caps) = re.captures(&l[..]) {
+                if let Some(g) = caps.get(2) {
+                    trigger_vec.push(String::from(g.as_str()));
+                }
+                if let Some(g) = caps.get(3) {
+                    desc_vec.push(g.as_str().replace("\"", ""));
+                }
+            }
         }
-        //out_str.push_str(&raw_str[..]);
+        else {
+            templ_str.push_str(&l[..]);
+            templ_str.push_str("\n");
+        }
+    }
+
+    if !templ_str.is_empty() {
+        templ_vec.push(templ_str.clone()+"\n");
+        templ_str.clear();
+    }
+
+    for (i, _) in trigger_vec.iter().enumerate() {
+        out_str.push_str("  <item>\n");
+        out_str.push_str(std::format!("    <match>{}</match>\n", &trigger_vec[i]).as_str());
+        println!("{}", trigger_vec[i]);
+        out_str.push_str(std::format!("    <fillin>{}</fillin>\n", &templ_vec[i]).as_str());
+        println!("{}", templ_vec[i]);
+        out_str.push_str("  </item>\n");
     }
 
     out_str.push_str("</snippets>");
